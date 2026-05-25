@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historial de Pedidos</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; }
+        body { background-color: #f7f9fa; color: #333; padding-bottom: 50px; }
+        nav { background: #2c3e50; padding: 15px; display: flex; gap: 15px; justify-content: center; }
+        nav a { color: white; text-decoration: none; font-weight: bold; padding: 5px 10px; border-radius: 4px; }
+        nav a:hover, nav a.active { background: #e67e22; }
+        .container { max-width: 800px; margin: 20px auto; padding: 0 20px; }
+        h1 { margin-bottom: 20px; color: #2c3e50; }
+        .pedido-card { background: white; padding: 15px; border-radius: 6px; margin-bottom: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); }
+        .pedido-header { display: flex; justify-content: space-between; align-items: center; }
+        .pedido-title { font-weight: bold; font-size: 16px; }
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; text-transform: uppercase; font-weight: bold; color: white; }
+        .badge-efectivo { background: #2ecc71; }
+        .badge-qr { converters: background; background: #9b59b6; }
+        .badge-pedidosya { background: #e74c3c; }
+        .details-box { display: none; margin-top: 10px; background: #f9f9f9; padding: 10px; border-left: 3px solid #e67e22; border-radius: 2px; }
+        button { background: #34495e; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 13px; }
+        button:hover { background: #2c3e50; }
+        .btn-danger { background: #c0392b; margin-bottom: 15px; padding: 10px; font-size: 14px;}
+        .btn-danger:hover { background: #a93226; }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <a href="index.html">Ventas</a>
+        <a href="pedidos.html" class="active">Registro Pedidos</a>
+        <a href="materia_prima.html">Materia Prima</a>
+        <a href="conteo.html">Conteo e Historial</a>
+        <a href="cierre.html">Cierre de Caja</a>
+    </nav>
+
+    <div class="container">
+        <h1>Pedidos Registrados</h1>
+        <button class="btn-danger" onclick="borrarTodo()">Borrar Todos los Registros del Sistema</button>
+        <div id="lista-pedidos">
+            <!-- Se carga dinámicamente -->
+        </div>
+    </div>
+
+    <script>
+        function cargarPedidos() {
+            const container = document.getElementById('lista-pedidos');
+            const registros = JSON.parse(localStorage.getItem('registros_pedidos')) || [];
+
+            if(registros.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color:#999; margin-top:20px;">No se han registrado pedidos todavía.</p>';
+                return;
+            }
+
+            container.innerHTML = '';
+            registros.forEach(p => {
+                let badgeClass = 'badge-efectivo';
+                if(p.tipo === 'qr') badgeClass = 'badge-qr';
+                if(p.tipo === 'pedidos ya') badgeClass = 'badge-pedidosya';
+
+                const card = document.createElement('div');
+                card.className = 'pedido-card';
+                card.innerHTML = `
+                    <div class="pedido-header">
+                        <div class="pedido-title">Pedido #${p.id} — Total: ${p.total} Bs</div>
+                        <div>
+                            <span class="badge ${badgeClass}">${p.tipo}</span>
+                            <button onclick="toggleDetalles(${p.id})">Detalles</button>
+                        </div>
+                    </div>
+                    <div class="details-box" id="details-${p.id}">
+                        <strong>Desglose del pedido:</strong>
+                        <ul style="margin-left: 20px; margin-top: 5px;">
+                            ${p.detalles.map(item => `<li>${item.nombre} (${item.detalle}) - ${item.precio} Bs</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function toggleDetalles(id) {
+            const box = document.getElementById(`details-${id}`);
+            if(box.style.display === 'block') {
+                box.style.display = 'none';
+            } else {
+                box.style.display = 'block';
+            }
+        }
+
+        function borrarTodo() {
+            if(confirm("¿Estás absolutamente seguro de que quieres borrar todos los datos de pedidos, stock y conteo? Esto no se puede deshacer.")) {
+                localStorage.clear();
+                cargarPedidos();
+            }
+        }
+
+        window.onload = cargarPedidos;
+    </script>
+</body>
+</html>
